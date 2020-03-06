@@ -1,4 +1,4 @@
-define(['app', 'timers/factories', 'timers/components','timers/planning'], function (app) {
+define(['app', 'timers/factories', 'timers/components','timers/planning140' ], function (app) {
 
     app.controller('DeviceTimersController', function ($scope, $routeParams, deviceApi, deviceLightApi, deviceRegularTimersApi, deviceSetpointTimersApi, deviceTimerOptions, deviceTimerConfigUtils, utils) {
         var vm = this;
@@ -66,8 +66,8 @@ define(['app', 'timers/factories', 'timers/components','timers/planning'], funct
             vm.selectedTimerIdx = null;
 
             deviceTimers.getTimers(vm.deviceIdx).then(function (items) {
-                 $( document ).trigger( "timersLoaded", [items] );//<===Update for Planning
                 vm.timers = items;
+                $( document ).trigger( "timersLoaded", [items] );;//<===Update for Planning
             });
         }
 
