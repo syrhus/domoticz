@@ -1,0 +1,16 @@
+<div class="{{$ctrl.getItemClass()}}">
+  <div ng-class="{'timeout': true, 'out': $ctrl.device.HaveTimeout}" ></div>
+  <div ng-if="$ctrl.getBatteryVisible()" class="battery"></div>
+  <div class="name bold">{{$ctrl.device.Name}}</div>
+  <div class="state bold">{{$ctrl.getStatus()}}</div>
+  <img class="action" ng-class="{{$ctrl.getImageClasses()}}" ng-src="{{$ctrl.getImage()}}" ng-click="$ctrl.isAllow?$ctrl.Click():null"/>
+  <div class="info">{{$ctrl.getInfo()}}</div>
+  <div ng-if="!$ctrl.dashboard" ng-class="{'smallicon favorite':true, 'isfavorite' : $ctrl.device.Favorite}"></div>
+  <ul class="actions" ng-if="!$ctrl.dashboard">
+      <li>Log</li>
+      <li>Edit</li>
+      <li>Timers</li>
+      <li>Notifications</li>
+  </ul>
+  <div class="ts-planning"></div>
+</div>
