@@ -9,6 +9,10 @@ define(['angularAMD', 'angular', 'angular-route'], function (angularAMD) {
                 templateUrl: 'views/dashboard.html',
                 controller: 'DashboardController'
             }))
+            .when('/DashboardCR', angularAMD.route({
+                templateUrl: 'views/dashboardCR.html',
+                controller: 'DashboardControllerCR'
+            }))
             .when('/Devices', angularAMD.route({
                 templateUrl: 'app/devices/Devices.html',
                 controller: 'DevicesController',
@@ -242,6 +246,12 @@ define(['angularAMD', 'angular', 'angular-route'], function (angularAMD) {
                     controller: 'DummyController'
                 })
             )
+            .when('/Devices/:id/Planning', angularAMD.route({
+                templateUrl: 'views/planning.html',
+                controller: 'DeviceTimersController',
+                controllerUrl: 'app/timers/DeviceTimersController.js',
+                controllerAs: 'vm'
+            }))
             .otherwise({
                 redirectTo: '/Dashboard'
             });

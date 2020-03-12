@@ -16,7 +16,11 @@ define(['app', 'DeviceController', 'DashboardFactories'], function (app) {
 		};
 
 		$scope.filterSwitches = function(item){
-			return deviceFunctions.IsLigthSwitch(item);
+			return (deviceFunctions.IsLigthSwitch(item) && !item.Name.startsWith("Chauffage"));
+		};
+
+		$scope.filterHeaters = function(item){
+			return (deviceFunctions.IsLigthSwitch(item) && item.Name.startsWith("Chauffage"));
 		};
 
 		$scope.filterSensors = function(item){

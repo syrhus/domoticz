@@ -1,23 +1,20 @@
-define(['app', 'DashboardFactories','timers/factories','timers/planning140'], function (app) {
+define(['app', 'DashboardFactories'], function (app) {
 app.component('deviceComponent', {
 	templateUrl: "views/lightswitch_template.html",
-	//controller: ['$scope','$rootScope','deviceFunctions', function($scope, $rootScope, deviceFunctions) {
-	controller: ['$scope','$rootScope','$element','deviceFunctions','deviceRegularTimersApi','$location', function($scope, $rootScope, $element, deviceFunctions, deviceRegularTimersApi, $location) {
+	controller: ['$scope','$rootScope','deviceFunctions', function($scope, $rootScope, deviceFunctions) {
 		var ctrl = this;
 		var item = null;
 		var levels = [];
-		var planning = null;
 		var _CANCEL = '#CANCEL#';
 
-		ctrl.dashboard = false;
+		ctrl.dashboard = true;
 		ctrl.isSelector = false;
-		ctrl.hasTimers = false;
 
 		ctrl.getImage = function(){
 			var path = "images/";
 			var state = item.Status;
 			if (this.isSelector)
-				state = (item.LevelInt === 0) ? "Off": "On";
+				state = (item.Status === "Off") ? "Off": "On";
 			else if ((item.Type == "Thermostat") && (item.SubType == "SetPoint"))
 				return path += 'override.png';
 			else if (deviceFunctions.IsScene(item)){
@@ -41,10 +38,6 @@ app.component('deviceComponent', {
 			else
 				return false;
 		};
-
-		ctrl.gotoPlanning = function(){
-			$location.path( "#/Devices/" + item.idx + "/Planning");
-		}
 
 		ctrl.getImageClasses = function(){
 			/*if (deviceFunctions.IsScene(item)){
@@ -93,31 +86,54 @@ app.component('deviceComponent', {
 			return passcode;
 		};
 
-		ctrl.isAllow = true;
-
-
-    ctrl.Click= function(lvl){
+		ctrl.imageClick = function(){
 			var passcode = this.clickAllow();
 			if(passcode === _CANCEL)
 				return;
 
-			var switchcmd = "";
-			if(lvl != undefined && lvl.value !== undefined){
-				switchcmd = "Set%20Level&level=" + lvl.value;
-				item.LevelInt = lvl.value;
-			}
-			else{
-				switchcmd = ctrl.getCmdStatus();
-			  item.Status = switchcmd;
-			}
-
-			ShowNotify($.t('Switching') + ' ' + ((lvl != undefined && lvl.value !== undefined) ? lvl.label : switchcmd) );
+			var switchcmd = this.getCmdStatus();
+			clearInterval($.myglobals.refreshTimer);
+			ShowNotify($.t('Switching') + ' ' + $.t(switchcmd));
 
 			var urlcmd  = "json.htm?type=command&idx=" + item.idx +
-			"&param=switchlight" +
-			"&switchcmd=" +  switchcmd +
-			"&passcode=" + passcode;
+			"&param=switchlight&switchcmd=" +  switchcmd +
+			"&level=0" + "&passcode=" + passcode;
+			$.ajax({
+				url: urlcmd,
+				async: true,
+				dataType: 'json',
+				success: function (data) {
+					if (data.status == "ERROR") {
+						HideNotify();
+						bootbox.alert($.t(data.message));
+					}
+					//wait 1 second
+					setTimeout(function () {
+						HideNotify();
+						//refreshfunction();
+					}, 1500);
+				},
+				error: function () {
+					HideNotify();
+					bootbox.alert($.t('Problem sending switch command'));
+				}
+			});
+		};
 
+		ctrl.isAllow = true;
+
+		ctrl.selectorClick = function(lvl){
+			var passcode = this.clickAllow();
+			if(passcode === _CANCEL)
+				return;
+
+			//var switchcmd = getCmdStatus();
+			clearInterval($.myglobals.refreshTimer);
+			//ShowNotify($.t('Switching') + ' ' + $.t(switchcmd));
+
+			var urlcmd  = "json.htm?type=command&idx=" + item.idx +
+			"&param=switchlight&switchcmd=Set%20Level&level=" + lvl +
+			"&passcode=" + passcode;
 			$.ajax({
 				url: urlcmd,
 				async: true,
@@ -144,10 +160,6 @@ app.component('deviceComponent', {
 			return (val.SwitchType === "Selector");
 		};
 
-		HasTimers = function(val){
-			return (val.Timers === "true");
-		}
-
 		setLevels = function(item){
 			if(item.LevelNames){
 				levels =  b64DecodeUnicode(item.LevelNames).split('|').map(function (levelName, index) {
@@ -161,28 +173,13 @@ app.component('deviceComponent', {
 			}
 		};
 
-		ctrl.isSelectedLevel = function(index){
-			return (index*10 === ctrl.device.LevelInt);
-		}
-
 		setItem = function(val){
 			item = val;
-
 			ctrl.isSelector = IsSelector(item);
-
 			if(ctrl.isSelector)
 				setLevels(item);
-
-			//if(ctrl.hasTimers && planning != null)
-			//	setPlanning();
 		};
 
-		setPlanning = function(){
-			deviceRegularTimersApi.getTimers(item.idx).then(function (items) {
-				planning.loadPlanning(items);
-					//$element.trigger( "timersLoaded", [items] );//<===Update for Planning
-			});
-		};
 
 		ctrl.$onChanges = function(changes){
 			if(changes != null && changes.device != null){
@@ -190,126 +187,78 @@ app.component('deviceComponent', {
 			}
 		};
 
-		ctrl.$postLink = function(){
-			if(ctrl.hasTimers){
-				var options = {"devid":item.idx, "refreshCallback":null, "viewThumbnail":true, "container":$element
-				,"commandAdd":"addtimer", "commandClear":"cleartimers","temperatureModes":false
-				,"propValue": "Cmd", "modes": [{"value":0,"name":$.t("On"), "class":"green"},{"value":1,"name":$.t("Off"), "class":"red"}]};
-				planning  = new PlanningTimerSheet(options);
-				setPlanning();
-			}
-
-		};
-
 		ctrl.$onInit = function(){
-			ctrl.hasTimers = HasTimers(ctrl.device);
-
 			setItem(ctrl.device);
 		};
-	}],
-	bindings: {
-		device: '<'
-	}
-});
 
-app.component('utilityComponent', {
-	templateUrl: "views/utility_template.html",
-	controller: ['$scope','$rootScope','$element','deviceFunctions','deviceSetpointTimersApi', function($scope, $rootScope, $element, deviceFunctions, deviceSetpointTimersApi) {
-		var ctrl = this;
-		var item = null;
-		var levels = [];
-		var planning = null;
-		var _CANCEL = '#CANCEL#';
+		//////////////
+		SwitchLightInt =function(idx, switchcmd, refreshfunction, passcode) {
+			clearInterval($.myglobals.refreshTimer);
 
-		ctrl.dashboard = true;
-
-		ctrl.getImage = function(){
-			var path = "images/";
-			var state = item.Status;
-			if ((item.Type == "Thermostat") && (item.SubType == "SetPoint"))
-				return path += 'override.png';
-			else if (deviceFunctions.IsScene(item)){
-				return path += 'push48.png';
-			}
-
-			return path += item.Image + "48_" + state +".png";
-		};
-
-		ctrl.getCmdStatus = function(){
-			return (item.Status === "Off") ? "On": "Off";
-		};
-
-		ctrl.getItemClass = function(css){
-			return css + (ctrl.dashboard ? " footer": "");
-		};
-
-		ctrl.getBatteryVisible = function(){
-			if(item.BatteryLevel  != undefined)
-				return (item.BatteryLevel != 255)
-			else
-				return false;
-		};
-
-		ctrl.getImageClasses = function(){
-			/*if (deviceFunctions.IsScene(item)){
-				if (item.Status == 'On')
-					return "transimg";
-				else if (item.Status == 'Off')
-					return "transimg";
-			}*/
-		};
-
-		ctrl.getStatus = function(){
-			if ((item.Type == "Thermostat") && (item.SubType == "SetPoint")
-				|| item.SubType == "Smartwares")
-				return item.Data + '\u00B0 ' + $rootScope.config.TempSign;
-			else return item.Status;
-		};
-
-		ctrl.getInfo =function(){
-			return $.t('Last Seen') + ' : ' + item.LastUpdate;
-		};
-
-    ctrl.clickAllow = function(){
-			if (window.my_config.userrights == 0) {
-				HideNotify();
-				ShowNotify($.t('You do not have permission to do that!'), 2500, true);
-				return _CANCEL;
-			}
-
-			var passcode = "";
-			if (typeof item.Protected != 'undefined') {
-				if (item.Protected == true) {
-					bootbox.prompt($.t("Please enter Password") + ":", function (result) {
-						if (result === null || result === "")
-							return _CANCEL;
-						else
-							passcode = result;
-					});
-				}
-			}
-			return passcode;
-		};
-
-		ctrl.isAllow = true;
-
-    ctrl.Click= function(){
-			var passcode = this.clickAllow();
-			if(passcode === _CANCEL)
-				return;
-
-			var switchcmd = ctrl.getCmdStatus();
-		  item.Status = switchcmd;
-
-			ShowNotify($.t('Switching') + ' ' + switchcmd );
-
-			var urlcmd  = "json.htm?type=command&idx=" + item.idx +
-			"&param=switchlight" +
-			"&switchcmd=" +  switchcmd +
-			"&passcode=" + passcode;
+			ShowNotify($.t('Switching') + ' ' + $.t(switchcmd));
 
 			$.ajax({
-				url: urlcmd,
+				url: "json.htm?type=command&param=switchlight" +
+				"&idx=" + idx +
+				"&switchcmd=" + switchcmd +
+				"&level=0" +
+				"&passcode=" + passcode,
+				async: false,
+				dataType: 'json',
+				success: function (data) {
+					if (data.status == "ERROR") {
+						HideNotify();
+						bootbox.alert($.t(data.message));
+					}
+					//wait 1 second
+					setTimeout(function () {
+						HideNotify();
+						refreshfunction();
+					}, 1000);
+				},
+				error: function () {
+					HideNotify();
+					bootbox.alert($.t('Problem sending switch command'));
+				}
+			});
+		}
+
+		SwitchLight=function(idx, switchcmd, refreshfunction) {
+
+			var passcode = "";
+			if (typeof isprotected != 'undefined') {
+				if (isprotected == true) {
+					bootbox.prompt($.t("Please enter Password") + ":", function (result) {
+						if (result === null) {
+							return;
+						} else {
+							if (result == "") {
+								return;
+							}
+							passcode = result;
+							SwitchLightInt(idx, switchcmd, refreshfunction, passcode);
+						}
+					});
+				}
+				else {
+					SwitchLightInt(idx, switchcmd, refreshfunction, passcode);
+				}
+			}
+			else {
+				SwitchLightInt(idx, switchcmd, refreshfunction, passcode);
+			}
+		}
+
+		SwitchSelectorLevelInt = function(idx, levelName, levelValue, refreshfunction, passcode) {
+			clearInterval($.myglobals.refreshTimer);
+
+			ShowNotify($.t('Switching') + ' ' + levelName);
+
+			$.ajax({
+				url: "json.htm?type=command&param=switchlight" +
+				"&idx=" + idx +
+				"&switchcmd=Set%20Level&level=" + levelValue +
+				"&passcode=" + passcode,
 				async: true,
 				dataType: 'json',
 				success: function (data) {
@@ -320,39 +269,95 @@ app.component('utilityComponent', {
 					//wait 1 second
 					setTimeout(function () {
 						HideNotify();
-						//refreshfunction();
-					}, 1500);
+						refreshfunction();
+					}, 1000);
 				},
 				error: function () {
 					HideNotify();
 					bootbox.alert($.t('Problem sending switch command'));
 				}
 			});
-		};
+		}
 
-		setItem = function(val){
-			item = val;
-			setPlanning();
-		};
-
-		setPlanning = function(){
-			var options = {"devid":item.idx, "refreshCallback":null, "viewThumbnail":true, "container":$element };
-			planning  = new PlanningTimerSheet(options);
-			deviceSetpointTimersApi.getTimers(item.idx).then(function (items) {
-				planning.loadPlanning(items);
-					//$( document ).trigger( "timersLoaded", [items] );//<===Update for Planning
-			});
-		};
-
-		ctrl.$onChanges = function(changes){
-			if(changes != null && changes.device != null){
-				setItem(changes.device.currentValue);
+		SwitchSelectorLevel = function(idx, levelName, levelValue, refreshfunction, isprotected) {
+			var passcode = "";
+			if (typeof isprotected != 'undefined') {
+				if (isprotected == true) {
+					bootbox.prompt($.t("Please enter Password") + ":", function (result) {
+						if (result === null) {
+							return;
+						} else {
+							if (result == "") {
+								return;
+							}
+							passcode = result;
+							SwitchSelectorLevelInt(idx, levelName, levelValue, refreshfunction, passcode);
+						}
+					});
+				}
+				else {
+					SwitchSelectorLevelInt(idx, levelName, levelValue, refreshfunction, passcode);
+				}
 			}
-		};
+			else {
+				SwitchSelectorLevelInt(idx, levelName, levelValue, refreshfunction, passcode);
+			}
+		}
 
-		ctrl.$onInit = function(){
-			setItem(ctrl.device);
-		};
+		SwitchSceneInt = function(idx, switchcmd, refreshfunction, passcode) {
+			clearInterval($.myglobals.refreshTimer);
+			ShowNotify($.t('Switching') + ' ' + $.t(switchcmd));
+
+			$.ajax({
+				url: "json.htm?type=command&param=switchscene&idx=" + idx +
+				"&switchcmd=" + switchcmd +
+				"&passcode=" + passcode,
+				async: false,
+				dataType: 'json',
+				success: function (data) {
+					if (data.status == "ERROR") {
+						HideNotify();
+						bootbox.alert($.t(data.message));
+					}
+					//wait 1 second
+					setTimeout(function () {
+						HideNotify();
+						refreshfunction();
+					}, 1000);
+				},
+				error: function () {
+					HideNotify();
+					bootbox.alert($.t('Problem sending switch command'));
+				}
+			});
+		}
+
+		SwitchScene = function(idx, switchcmd, refreshfunction, isprotected) {
+			var passcode = "";
+			if (typeof isprotected != 'undefined') {
+				if (isprotected == true) {
+					bootbox.prompt($.t("Please enter Password") + ":", function (result) {
+						if (result === null) {
+							return;
+						} else {
+							if (result == "") {
+								return;
+							}
+							passcode = result;
+							SwitchSceneInt(idx, switchcmd, refreshfunction, passcode);
+						}
+					});
+				}
+				else {
+					SwitchSceneInt(idx, switchcmd, refreshfunction, passcode);
+				}
+			}
+			else {
+				SwitchSceneInt(idx, switchcmd, refreshfunction, passcode);
+			}
+		}
+
+		/////////
 	}],
 	bindings: {
 		device: '<'
