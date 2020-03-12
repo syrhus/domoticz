@@ -2066,3 +2066,31 @@ table.display thead th.sorting_disabled div.DataTables_sort_wrapper {
   *background-color: #695499;
 }
 
+.devices{list-style: :none; margin:0; padding:0;}
+.devices item:last-child::after {clear:both;}
+device-component{}
+
+.item{
+	position: relative;	display: block;
+	float: left;
+	width:200px;
+	height:150px;
+	background-color:rgba(51, 51, 51, 0.6) !important;
+	font-family: tahoma !important;
+	margin: 0 10px 10px 0;
+}
+
+.item *{font-family: inherit !important}
+.item ul{list-style: :none; margin:0; padding:0;}
+.item .bold{font-weight: bold !important}
+.item .name{margin-left:5px;}
+.item .state{position: absolute; right:5px;top:0;text-transform: uppercase !important;}
+.item .action{position: relative;left:50%;margin:20px 0 0 -24px;}
+.item .info{position:absolute;right:5px;top:1.4em;font-size: 0.8em;}
+.item .selector{width: 100%;}
+.item .selector .btn-small{margin:0}
+.item .actions li{display: inline-block;}
+
+.heaters{ border:solid 1px #BBBBBB; padding: 10px;}
+
+#utilities{margin-top:10px;}
