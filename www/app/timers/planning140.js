@@ -1048,22 +1048,22 @@
 };
 ///////////////////////////////////////////
 //
-// $( document ).on( "timersInitialized", function(event, vm, refreshTimers){
-// 	var options = {"devid":vm.deviceIdx, "refreshCallback":function(){refreshTimers();} };
-// 	 if( !vm.isSetpointTimers && ((vm.isDimmer || vm.isSelector) || !vm.IsLED)){
-// 			 $.extend(options, {"commandAdd":"addtimer", "commandClear":"cleartimers","temperatureModes":false} );
-// 			 if((vm.isDimmer || vm.isSelector))
-// 					 $.extend(options, {
-// 					 "modes": $.map( vm.levelOptions, function(val,i){
-// 							 return {"value":val.value, "class":"m"+i, "name":val.label };}),
-// 					 "propValue":"Level",
-// 					 "propValueAjax":"level"});
-// 			 else
-// 					 $.extend(options, {	"modes": [{"value":0,"name":$.t("On"), "class":"green"},{"value":1,"name":$.t("Off"), "class":"red"}],
-// 							 "propValue":"Cmd",
-// 							 "propValueAjax":"command"});
-// 	 }
-//
-// 	PlanningTimerSheet(options);
-// });
+$( document ).on( "timersInitialized", function(event, vm, refreshTimers){
+	var options = {"devid":vm.deviceIdx, "refreshCallback":function(){refreshTimers();} };
+	 if( !vm.isSetpointTimers && ((vm.isDimmer || vm.isSelector) || !vm.IsLED)){
+			 $.extend(options, {"commandAdd":"addtimer", "commandClear":"cleartimers","temperatureModes":false} );
+			 if((vm.isDimmer || vm.isSelector))
+					 $.extend(options, {
+					 "modes": $.map( vm.levelOptions, function(val,i){
+							 return {"value":val.value, "class":"m"+i, "name":val.label };}),
+					 "propValue":"Level",
+					 "propValueAjax":"level"});
+			 else
+					 $.extend(options, {	"modes": [{"value":0,"name":$.t("On"), "class":"green"},{"value":1,"name":$.t("Off"), "class":"red"}],
+							 "propValue":"Cmd",
+							 "propValueAjax":"command"});
+	 }
+
+	PlanningTimerSheet(options);
+});
 ///////////////////////////////////////////
