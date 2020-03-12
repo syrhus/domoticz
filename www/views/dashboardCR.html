@@ -1,6 +1,7 @@
 <div id="dashcontent" class="container" ng-controller="DashboardControllerCR">
   <timesun></timesun>
-  <ul id='scenes' class='devices'><device ng-repeat='device in devices|filter:filterScenes' device='device'></device></ul>
-  <ul id='switches' class='devices'><device-component ng-repeat='device in devices|filter:filterSwitches' device='device' class="item"></device-component><div style="clear:both"></div></ul>
-  <ul id='utilities' class='devices'><utility-component ng-repeat='device in devices|filter:filterUtilities' device='device' class="item"></utility-component><div style="clear:both"></div></ul>
+  <!--<ul id='scenes' class='devices'><device ng-repeat='device in devices|filter:filterScenes' device='device'></device></ul>
+  <ul id='switches' class='devices'><device-component ng-repeat='device in devices|filter:filterSwitches' device='device' class="item"></device-component><div style="clear:both"></div></ul>-->
+  <div class="heaters"><label>Chauffage</label><ul id='switches' class='devices'><device-component ng-repeat='device in devices|filter:filterHeaters' device='device' class="item"></device-component><div style="clear:both"></div></ul></div>
+  <!--<ul id='utilities' class='devices'><utility-component ng-repeat='device in devices|filter:filterUtilities' device='device' class="item"></utility-component><div style="clear:both"></div></ul>-->
 </div>
